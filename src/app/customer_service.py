@@ -4,7 +4,8 @@ from .config import LOGGER_NAME
 from .models import Customer
 from .customer_repository import CustomerRepository
 from . import customer_mapper
-from .exceptions import InvalidPageException, InvalidCustomerIdException, CustomerNotFoundException
+from .exceptions import InvalidPageException, InvalidCustomerIdException, CustomerNotFoundException, \
+    CustomerIdTakenException
 
 
 class CustomerService:
@@ -32,6 +33,11 @@ class CustomerService:
     def add_customer(self, customer_data: Dict[str, str]):
         customer_id = customer_data.get('customer_id')
         self.logger.info("Requested to add customer with customer id %s", customer_id)
+
+        if self.customer_repository.is_customer_exist(customer_id):
+            self.logger.error("customer already exists with id %s", customer_id)
+            raise CustomerIdTakenException(f"customer already exists with id {customer_id}")
+
         if customer_id is None or len(customer_id) == 0:
             self.logger.error("Customer id not available or the provided one is invalid")
             raise InvalidCustomerIdException("Customer id not available or the provided one is invalid")
